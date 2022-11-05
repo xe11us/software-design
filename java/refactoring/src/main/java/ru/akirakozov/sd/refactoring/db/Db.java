@@ -14,28 +14,59 @@ public class Db {
         return dbAddress;
     }
 
-    public static Product mostExpensiveProduct(String query) {
-        return handleSelectQuery(query, Db::fetchProduct);
+    public static Product selectFirstProductInSorted(String tableName, String orderBy) throws DbException {
+        checkArguments(tableName, orderBy);
+        return handleSelectQuery(
+                "SELECT NAME, PRICE FROM " + tableName + " ORDER BY " + orderBy + " LIMIT 1",
+                Db::fetchProduct
+        );
     }
 
-    public static Product cheapestProduct(String query) {
-        return handleSelectQuery(query, Db::fetchProduct);
+    public static Product selectLastProductInSorted(String tableName, String orderBy) throws DbException {
+        checkArguments(tableName, orderBy);
+        return handleSelectQuery(
+                "SELECT * FROM " + tableName + " ORDER BY " + orderBy + " DESC LIMIT 1",
+                Db::fetchProduct
+        );
     }
 
-    public static int sum(String query) {
-        return handleSelectQuery(query, Db::fetchFirstResultInt);
+    public static int sum(String tableName, String propertyToSum) throws DbException {
+        checkArguments(tableName, propertyToSum);
+        return handleSelectQuery(
+                "SELECT SUM(" + propertyToSum + ") FROM " + tableName,
+                Db::fetchFirstResultInt
+        );
     }
 
-    public static int count(String query) {
-        return handleSelectQuery(query, Db::fetchFirstResultInt);
+    public static int count(String tableName) throws DbException {
+        checkArguments(tableName);
+        return handleSelectQuery(
+                "SELECT COUNT(*) FROM " + tableName,
+                Db::fetchFirstResultInt
+        );
     }
 
-    public static void addProduct(String query) {
-        handleInsertQuery(query);
+    public static void add(String tableName, List<String> properties, List<String> values) throws DbException {
+        if (properties.size() != values.size()) {
+            throw new DbException("Properties and values have different sizes");
+        }
+        checkArguments(tableName);
+        checkArguments(properties.toArray(new String[0]));
+        checkArguments(values.toArray(new String[0]));
+        handleUpdateQuery(
+                "INSERT INTO " + tableName + " (" + String.join(",", properties) + ")"
+                        + " VALUES (\"" + String.join("\",\"", values) + "\")"
+        );
     }
 
-    public static List<Product> selectAllProducts(String query) {
-        return handleSelectQuery(query, Db::fetchAllProducts);
+    public static void clear(String tableName) throws DbException {
+        checkArguments(tableName);
+        handleUpdateQuery("DELETE FROM " + tableName);
+    }
+
+    public static List<Product> selectAllProducts(String tableName) throws DbException {
+        checkArguments(tableName);
+        return handleSelectQuery("SELECT NAME, PRICE FROM " + tableName, Db::fetchAllProducts);
     }
 
     private static Product fetchProduct(ResultSet rs) {
@@ -83,7 +114,7 @@ public class Db {
         return result;
     }
 
-    private static void handleInsertQuery(String query) {
+    private static void handleUpdateQuery(String query) {
         try {
             try (Connection c = DriverManager.getConnection(dbAddress)) {
                 Statement stmt = c.createStatement();
@@ -92,6 +123,14 @@ public class Db {
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void checkArguments(String... args) throws DbException {
+        for (String arg : args) {
+            if (arg.contains(" ")) {
+                throw new DbException("Illegal characters in argument: " + arg);
+            }
         }
     }
 }
