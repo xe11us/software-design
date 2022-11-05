@@ -15,7 +15,7 @@ import java.util.List;
 public class AddProductServlet extends HttpServlet {
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String name = request.getParameter("name");
         String price = request.getParameter("price");
         Long.parseLong(price);
@@ -28,6 +28,6 @@ public class AddProductServlet extends HttpServlet {
 
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println("OK");
+        response.getWriter().print("OK\n");
     }
 }

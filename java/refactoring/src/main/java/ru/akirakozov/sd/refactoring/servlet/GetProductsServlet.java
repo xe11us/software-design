@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class GetProductsServlet extends HttpServlet {
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         List<Product> products;
         try {
             products = Db.selectAllProducts("PRODUCT");
